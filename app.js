@@ -7,7 +7,10 @@ app.set('port', (process.env.PORT || 5000));
 app.get('^/:asset(http*)\.:ext$', function (req, res) {
   var asset = decodeURIComponent(req.params.asset)+'.'+req.params.ext;
   console.log(asset)
-  request.get(asset).pipe(res);
+  resource = request.get(asset).pipe(res);
+  resource.on('response', function(response) {
+    response.headers['Cache-Control'] = 'max-age=60, public';
+  });
 });
 
 app.listen(app.get('port'), function() {
