@@ -9,7 +9,7 @@ app.get('^/:asset(http*)\.:ext$', function (req, res) {
   console.log(asset)
   resource = request.get(asset).pipe(res);
   resource.on('response', function(response) {
-    response.headers['Cache-Control'] = 'max-age=60, public';
+    response.headers['Cache-Control'] = 'max-age=3600, public';
   });
 });
 
