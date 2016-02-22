@@ -125,7 +125,7 @@ app.all('*', function(request, response){
   
   // Check if the routed domain is in the whitelist
   if (bad_request || !check_domain_suffix(app_url)){
-    response.status(401).end();
+    response.status(400).end();
   } else {
     conf = {
       'router_base_url': request.protocol + "://" + request.headers.host,
