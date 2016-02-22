@@ -16,6 +16,8 @@ const D_INC_REQ = (process.env.DEBUG_INCOMING_REQUEST == '1');
 // DEBUG: load request debugger
 const D_REQUEST_ALL = (process.env.DEBUG_REQUEST_ALL == '1');
 // The domain string to add to the frame-ancestors part of the CSP header
+const ROUTER_PROTOCOL = (process.env.ROUTER_PROTOCOL || 'https');
+// The domain string to add to the frame-ancestors part of the CSP header
 const CSP_WHITELIST_FRAME_ANCESTORS = (
   process.env.CSP_WHITELIST_FRAME_ANCESTORS || "localhost");
 // List of domains that can be routed
@@ -142,7 +144,7 @@ app.all('*', function(request, response){
   console.log(["protocol", request.protocol]);
 
   conf = {
-    'router_base_url': request.protocol + "://" + request.headers.host,
+    'router_base_url': ROUTER_PROTOCOL + "://" + request.headers.host,
     'app_base_url': "https" + "://" + app_url,
     'whitelist_frame_ancestors': CSP_WHITELIST_FRAME_ANCESTORS
   };
