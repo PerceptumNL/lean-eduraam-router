@@ -1,5 +1,6 @@
 var express = require('express');
 var requests = require('request');
+var tough = require('tough-cookie');
 var url = require('url');
 
 /************
@@ -44,7 +45,7 @@ function alter_request_headers(req, conf){
   for(var key in req.headers){
     if(key == "host" || key == "connection"){
       continue;
-    } else if(key == "cookie") { //TODO load server cookiejar
+    } else if(key == "cookie") {
       continue;
     } else if(key == "referer"){
       try {
@@ -71,7 +72,7 @@ function alter_response_headers(res, conf){
   for(var key in res.headers){
     if(key == "location"){
       altered_headers[key] = get_routed_url(res.headers[key], conf);
-    } else if(key == "set-cookie"){ // TODO: update server cookiejar
+    } else if(key == "set-cookie"){
       continue;
     } else if(key == "x-frame-options"){
       continue;
@@ -94,6 +95,9 @@ function alter_response_headers(res, conf){
 var app = express();
 app.set('port', (process.env.PORT || 5000));
 
+var cookiejar = requests.jar(new tough.MemoryCookieStore);
+var serialized_cookiejar = cookiejar._jar.toJSON();
+
 app.all('*', function(request, response){
   D_INC_REQ && console.log(
     'incoming request: '+request.method+' '+request.originalUrl);
@@ -109,13 +113,14 @@ app.all('*', function(request, response){
   requests({
     method: request.method,
     uri: conf.app_base_url+request.originalUrl,
-    headers: alter_request_headers(request, conf)
+    headers: alter_request_headers(request, conf),
+    jar: cookiejar
   }).on('response', function(remote_response){
     response.set(alter_response_headers(remote_response, conf));
+    //TODO: Update cookiejar in DB
   }).pipe(response);
 });
 
 app.listen(app.get('port'), function() {
     console.log('Router is running on port', app.get('port'));
-    console.log(process.env);
 });
