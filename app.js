@@ -16,6 +16,13 @@ const D_INC_REQ = (process.env.DEBUG_INCOMING_REQUEST == '1');
 // The domain string to add to the frame-ancestors part of the CSP header
 const CSP_WHITELIST_FRAME_ANCESTORS = (
   process.env.CSP_WHITELIST_FRAME_ANCESTORS || "localhost");
+// List of domains that can be routed
+const ROUTING_DOMAIN_WHITELIST = {
+    "code.org": 1,
+    "scratch.mit.edu": 1,
+    "google-analytics.com": 1,
+    "google.com": 1};
+
 
 /**
  * Utility function to rewrite url to go through router
@@ -88,6 +95,17 @@ function alter_response_headers(res, conf){
   return altered_headers;
 }
 
+function check_domain_suffix(url){
+  spl = url.split(".");
+  for (var i = -1; i > -4; i--) {
+    if (ROUTING_DOMAIN_WHITELIST[spl.slice(i).join(".")]){
+      return true;
+    }
+  }
+  return false;
+}
+
+
 /**********************************
  * Setting up express application *
  *********************************/
@@ -102,12 +120,18 @@ app.all('*', function(request, response){
   D_INC_REQ && console.log(
     'incoming request: '+request.method+' '+request.originalUrl);
 
-  conf = {
-    'router_base_url': request.protocol + "://" + request.headers.host,
-    //TODO: Retrieve app domain from AES encrypted subdomain
-    'app_base_url': "https://studio.code.org",
-    'whitelist_frame_ancestors': CSP_WHITELIST_FRAME_ANCESTORS
-  };
+  var hex_subdomain = new Buffer(request.headers.host.split(".")[0], "hex");
+  var app_url = hex_subdomain.toString();
+  
+  // Check if the routed domain is in the whitelist
+  if (!check_domain_suffix(app_url)){
+    response.status(404).end();
+  } else {
+    conf = {
+      'router_base_url': request.protocol + "://" + request.headers.host,
+      'app_base_url': request.protocol + "://" + app_url,
+      'whitelist_frame_ancestors': CSP_WHITELIST_FRAME_ANCESTORS
+    };
 
   // Proxying the request, while altering the headers
   requests({
