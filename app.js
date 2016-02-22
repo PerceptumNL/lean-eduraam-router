@@ -124,12 +124,13 @@ app.all('*', function(request, response){
     var hex_subdomain = new Buffer(request.headers.host.split(".")[0], "hex");
     var app_url = hex_subdomain.toString();
   } catch(err) {
-    var bad_request = true;
+    response.status(400).end();
+    return;
   }
   
   // Check if the routed domain is in the whitelist
-  if (bad_request || !check_domain_suffix(app_url)){
-    response.status(400).end();
+  if (!check_domain_suffix(app_url)){
+    response.status(403).end();
     return;
   }
 
