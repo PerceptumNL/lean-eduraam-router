@@ -1,7 +1,7 @@
 var express = require('express');
 var requests = require('request');
 var tough = require('tough-cookie');
-var url = require('url');
+var urllib = require('url');
 
 /************
  * Settings *
@@ -35,7 +35,7 @@ if(D_REQUEST_ALL){
  * @param {Object} conf Configuration object for this interaction.
  **/
 function get_routed_url(url, conf){
-  return conf.router_base_url+url.parse(url).path;
+  return conf.router_base_url+urllib.parse(url).path;
 }
 
 /**
@@ -44,7 +44,7 @@ function get_routed_url(url, conf){
  * @param {Object} conf Configuration object for this interaction.
  **/
 function get_unrouted_url(url, conf){
-  return conf.app_base_url+url.parse(url).path;
+  return conf.app_base_url+urllib.parse(url).path;
 }
 
 /**
