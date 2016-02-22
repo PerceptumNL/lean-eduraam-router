@@ -130,12 +130,14 @@ app.all('*', function(request, response){
   // Check if the routed domain is in the whitelist
   if (bad_request || !check_domain_suffix(app_url)){
     response.status(400).end();
-  } else {
-    conf = {
-      'router_base_url': request.protocol + "://" + request.headers.host,
-      'app_base_url': request.protocol + "://" + app_url,
-      'whitelist_frame_ancestors': CSP_WHITELIST_FRAME_ANCESTORS
-    };
+    return;
+  }
+
+  conf = {
+    'router_base_url': request.protocol + "://" + request.headers.host,
+    'app_base_url': request.protocol + "://" + app_url,
+    'whitelist_frame_ancestors': CSP_WHITELIST_FRAME_ANCESTORS
+  };
 
   // Proxying the request, while altering the headers
   requests({
