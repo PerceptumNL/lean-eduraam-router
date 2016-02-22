@@ -96,8 +96,8 @@ function alter_response_headers(res, conf){
 }
 
 function check_domain_suffix(url){
-  spl = url.split(".");
-  for (var i = -1; i > -4; i--) {
+  var spl = url.split(".");
+  for (var i = -2; i > -4; i--) {
     if (ROUTING_DOMAIN_WHITELIST[spl.slice(i).join(".")]){
       return true;
     }
@@ -119,13 +119,17 @@ var serialized_cookiejar = cookiejar._jar.toJSON();
 app.all('*', function(request, response){
   D_INC_REQ && console.log(
     'incoming request: '+request.method+' '+request.originalUrl);
-
-  var hex_subdomain = new Buffer(request.headers.host.split(".")[0], "hex");
-  var app_url = hex_subdomain.toString();
+  
+  try {
+    var hex_subdomain = new Buffer(request.headers.host.split(".")[0], "hex");
+    var app_url = hex_subdomain.toString();
+  } catch(err) {
+    var bad_request = true;
+  }
   
   // Check if the routed domain is in the whitelist
-  if (!check_domain_suffix(app_url)){
-    response.status(404).end();
+  if (bad_request || !check_domain_suffix(app_url)){
+    response.status(400).end();
   } else {
     conf = {
       'router_base_url': request.protocol + "://" + request.headers.host,
