@@ -139,9 +139,11 @@ app.all('*', function(request, response){
     return;
   }
 
+  console.log(["protocol", request.protocol]);
+
   conf = {
     'router_base_url': request.protocol + "://" + request.headers.host,
-    'app_base_url': request.protocol + "://" + app_url,
+    'app_base_url': "https" + "://" + app_url,
     'whitelist_frame_ancestors': CSP_WHITELIST_FRAME_ANCESTORS
   };
 
