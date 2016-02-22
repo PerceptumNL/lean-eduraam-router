@@ -15,6 +15,13 @@ const D_INC_REQ = (process.env.DEBUG_INCOMING_REQUEST == '1');
 // The domain string to add to the frame-ancestors part of the CSP header
 const CSP_WHITELIST_FRAME_ANCESTORS = (
   process.env.CSP_WHITELIST_FRAME_ANCESTORS || "localhost");
+// List of domains that can be routed
+const ROUTING_DOMAIN_WHITELIST = {
+    "code.org": 1,
+    "scratch.mit.edu": 1,
+    "google-analytics.com": 1,
+    "google.com": 1};
+
 
 /**
  * Utility function to rewrite url to go through router
@@ -87,6 +94,18 @@ function alter_response_headers(res, conf){
   return altered_headers;
 }
 
+function check_domain_suffix(url){
+  var hex = new Buffer(url.split(".")[0], "hex");
+  var domain = hex.toString().split(".");
+  for (var i = -1; i > -4; i--) {
+    if (ROUTING_DOMAIN_WHITELIST[domain.slice(i).join(".")]){
+      return true;
+    }
+  }
+  return false;
+}
+
+
 /**********************************
  * Setting up express application *
  *********************************/
@@ -98,24 +117,28 @@ app.all('*', function(request, response){
   D_INC_REQ && console.log(
     'incoming request: '+request.method+' '+request.originalUrl);
 
-  conf = {
-    'router_base_url': request.protocol + "://" + request.headers.host,
-    //TODO: Retrieve app domain from AES encrypted subdomain
-    'app_base_url': "https://studio.code.org",
-    'whitelist_frame_ancestors': CSP_WHITELIST_FRAME_ANCESTORS
-  };
+  // Check if the routed domain is in the whitelist
+  if (!check_domain_suffix(request.headers.host)){
+    response.status(404).end();
+  } else {
+    conf = {
+      'router_base_url': request.protocol + "://" + request.headers.host,
+      //TODO: Retrieve app domain from AES encrypted subdomain
+      'app_base_url': "https://studio.code.org",
+      'whitelist_frame_ancestors': CSP_WHITELIST_FRAME_ANCESTORS
+    };
 
-  // Proxying the request, while altering the headers
-  requests({
-    method: request.method,
-    uri: conf.app_base_url+request.originalUrl,
-    headers: alter_request_headers(request, conf)
-  }).on('response', function(remote_response){
-    response.set(alter_response_headers(remote_response, conf));
-  }).pipe(response);
+    // Proxying the request, while altering the headers
+    requests({
+      method: request.method,
+      uri: conf.app_base_url+request.originalUrl,
+      headers: alter_request_headers(request, conf)
+    }).on('response', function(remote_response){
+      response.set(alter_response_headers(remote_response, conf));
+    }).pipe(response);
+  }
 });
 
 app.listen(app.get('port'), function() {
-    console.log('Router is running on port', app.get('port'));
     console.log(process.env);
 });
