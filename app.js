@@ -59,7 +59,7 @@ function alter_request_headers(req, conf){
       continue;
     } else if(key == "cookie") {
       continue;
-    } else if(key == "referer"){
+    } else if(key == "referer" || key == "origin"){
       try {
         altered_headers[key] = get_unrouted_url(req.headers[key], conf);
       } catch(err) {
