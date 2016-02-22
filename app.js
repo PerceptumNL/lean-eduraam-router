@@ -12,7 +12,7 @@ const D_REQ_HDRS = (process.env.DEBUG_REQUEST_HEADERS == '1');
 // DEBUG: show the altered response headers send to the browser
 const D_RES_HDRS = (process.env.DEBUG_RESPONSE_HEADERS == '1');
 // DEBUG: show the incoming request (METHOD + PATH)
-const D_INC_REQ = true || (process.env.DEBUG_INCOMING_REQUEST == '1');
+const D_INC_REQ = (process.env.DEBUG_INCOMING_REQUEST == '1');
 // The domain string to add to the frame-ancestors part of the CSP header
 const CSP_WHITELIST_FRAME_ANCESTORS = (
   process.env.CSP_WHITELIST_FRAME_ANCESTORS || "localhost");
