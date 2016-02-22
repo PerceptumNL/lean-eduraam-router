@@ -140,7 +140,7 @@ app.all('*', function(request, response){
   };
 
   // Proxying the request, while altering the headers
-  requests({
+  var remote_request = requests({
     method: request.method,
     uri: conf.app_base_url+request.originalUrl,
     headers: alter_request_headers(request, conf),
@@ -149,6 +149,7 @@ app.all('*', function(request, response){
     response.set(alter_response_headers(remote_response, conf));
     //TODO: Update cookiejar in DB
   }).pipe(response);
+  request.pipe(remote_request);
 });
 
 app.listen(app.get('port'), function() {
