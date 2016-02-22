@@ -95,10 +95,9 @@ function alter_response_headers(res, conf){
 }
 
 function check_domain_suffix(url){
-  var hex = new Buffer(url.split(".")[0], "hex");
-  var domain = hex.toString().split(".");
+  spl = url.split(".");
   for (var i = -1; i > -4; i--) {
-    if (ROUTING_DOMAIN_WHITELIST[domain.slice(i).join(".")]){
+    if (ROUTING_DOMAIN_WHITELIST[spl.slice(i).join(".")]){
       return true;
     }
   }
@@ -117,14 +116,16 @@ app.all('*', function(request, response){
   D_INC_REQ && console.log(
     'incoming request: '+request.method+' '+request.originalUrl);
 
+  var hex_subdomain = new Buffer(request.headers.host.split(".")[0], "hex");
+  var app_url = hex_subdomain.toString();
+  
   // Check if the routed domain is in the whitelist
-  if (!check_domain_suffix(request.headers.host)){
+  if (!check_domain_suffix(app_url)){
     response.status(404).end();
   } else {
     conf = {
       'router_base_url': request.protocol + "://" + request.headers.host,
-      //TODO: Retrieve app domain from AES encrypted subdomain
-      'app_base_url': "https://studio.code.org",
+      'app_base_url': request.protocol + "://" + app_url,
       'whitelist_frame_ancestors': CSP_WHITELIST_FRAME_ANCESTORS
     };
 
