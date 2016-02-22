@@ -12,7 +12,7 @@ const D_REQ_HDRS = (process.env.DEBUG_REQUEST_HEADERS == '1');
 // DEBUG: show the altered response headers send to the browser
 const D_RES_HDRS = (process.env.DEBUG_RESPONSE_HEADERS == '1');
 // DEBUG: show the incoming request (METHOD + PATH)
-const D_INC_REQ = (process.env.DEBUG_INCOMING_REQUEST == '1');
+const D_INC_REQ = true || (process.env.DEBUG_INCOMING_REQUEST == '1');
 // The domain string to add to the frame-ancestors part of the CSP header
 const CSP_WHITELIST_FRAME_ANCESTORS = (
   process.env.CSP_WHITELIST_FRAME_ANCESTORS || "localhost");
@@ -119,14 +119,14 @@ var serialized_cookiejar = cookiejar._jar.toJSON();
 app.all('*', function(request, response){
   D_INC_REQ && console.log(
     'incoming request: '+request.method+' '+request.originalUrl);
-  
+
   try {
     var hex_subdomain = new Buffer(request.headers.host.split(".")[0], "hex");
     var app_url = hex_subdomain.toString();
   } catch(err) {
     var bad_request = true;
   }
-  
+
   // Check if the routed domain is in the whitelist
   if (bad_request || !check_domain_suffix(app_url)){
     response.status(400).end();
@@ -145,11 +145,14 @@ app.all('*', function(request, response){
     uri: conf.app_base_url+request.originalUrl,
     headers: alter_request_headers(request, conf),
     jar: cookiejar
-  }).on('response', function(remote_response){
+  });
+  request.pipe(remote_request);
+  remote_request.on('response', function(remote_response){
+    debugger;
     response.set(alter_response_headers(remote_response, conf));
     //TODO: Update cookiejar in DB
-  }).pipe(response);
-  request.pipe(remote_request);
+  });
+  remote_request.pipe(response);
 });
 
 app.listen(app.get('port'), function() {
