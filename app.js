@@ -141,8 +141,6 @@ app.all('*', function(request, response){
     return;
   }
 
-  console.log(["protocol", request.protocol]);
-
   conf = {
     'router_base_url': ROUTER_PROTOCOL + "://" + request.headers.host,
     'app_base_url': "https" + "://" + app_url,
