@@ -156,6 +156,7 @@ app.all('*', function(request, response){
   });
   request.pipe(remote_request);
   remote_request.on('response', function(remote_response){
+    response.status(status_code);
     response.set(alter_response_headers(remote_response, conf));
     //TODO: Update cookiejar in DB
   });
