@@ -32,7 +32,8 @@ const ROUTING_DOMAIN_WHITELIST = {
 
 if(D_REQUEST_ALL){
   require('request-debug')(requests, function(type, data, r){
-    console.error({type: data});
+    console.error("Logging "+type);
+	console.error(data);
     if( type == "request" && ( r.method == "PUT" || r.method == "POST" ) ){
       if(!data.body) console.error("WARNING: No body with PUT or POST");
     }
