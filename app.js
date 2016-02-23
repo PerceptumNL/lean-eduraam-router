@@ -31,7 +31,11 @@ const ROUTING_DOMAIN_WHITELIST = {
     "google.com": 1};
 
 if(D_REQUEST_ALL){
-  require('request-debug')(requests);
+  require('request-debug')(requests, function(type, data, r){
+	  if( type == "request" && ( r.method == "PUT" || r.method == "POST" ) ){
+		  if(!data.body) console.log("No body with PUT or POST");
+	  }
+  });
 }
 
 /*********************************
