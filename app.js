@@ -284,11 +284,11 @@ function execute_route_request(request, response, conf, token, cookiejar){
     uri: conf.app_base_url+request.originalUrl,
     qs: request.query,
     headers: alter_request_headers(request, conf),
-    jar: cookiejar
+    jar: cookiejar,
+    body: remote_request
   });
-  request.pipe(remote_request);
   remote_request.on('response', function(remote_response){
-  response.status(remote_response.status_code);
+    response.status(remote_response.status_code);
     response.set(alter_response_headers(remote_response, conf));
     if(token){
       // TODO: Only update cookiejar when changes happened.
