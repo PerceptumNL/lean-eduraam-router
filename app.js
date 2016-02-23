@@ -279,6 +279,7 @@ function route_request(request, response){
 
 function execute_route_request(request, response, conf, token, cookiejar){
   // Proxying the request, while altering the headers
+  console.log(request.body);
   var remote_request = requests({
     method: request.method,
     uri: conf.app_base_url+request.originalUrl,
