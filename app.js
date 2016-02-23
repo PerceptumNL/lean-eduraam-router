@@ -25,16 +25,17 @@ const CSP_WHITELIST_FRAME_ANCESTORS = (
   process.env.CSP_WHITELIST_FRAME_ANCESTORS || "localhost");
 // List of domains that can be routed
 const ROUTING_DOMAIN_WHITELIST = {
-    "code.org": 1,
-    "scratch.mit.edu": 1,
-    "google-analytics.com": 1,
-    "google.com": 1};
+  "code.org": 1,
+  "scratch.mit.edu": 1,
+  "google-analytics.com": 1,
+  "google.com": 1};
 
 if(D_REQUEST_ALL){
   require('request-debug')(requests, function(type, data, r){
-	  if( type == "request" && ( r.method == "PUT" || r.method == "POST" ) ){
-		  if(!data.body) console.log("No body with PUT or POST");
-	  }
+    console.error({type: data});
+    if( type == "request" && ( r.method == "PUT" || r.method == "POST" ) ){
+      if(!data.body) console.error("WARNING: No body with PUT or POST");
+    }
   });
 }
 
