@@ -285,7 +285,7 @@ function execute_route_request(request, response, conf, token, cookiejar){
     qs: request.query,
     headers: alter_request_headers(request, conf),
     jar: cookiejar,
-    body: request
+    body: request.body
   });
   remote_request.on('response', function(remote_response){
     response.status(remote_response.status_code);
