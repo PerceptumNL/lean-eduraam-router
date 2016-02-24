@@ -25,6 +25,7 @@ const CSP_WHITELIST_FRAME_ANCESTORS = (
   process.env.CSP_WHITELIST_FRAME_ANCESTORS || "localhost");
 // List of domains that can be routed
 const ROUTING_DOMAIN_WHITELIST = {
+  "mock": 1,
   "code.org": 1,
   "scratch.mit.edu": 1,
   "google-analytics.com": 1,
@@ -228,6 +229,7 @@ function alter_response_headers(res, conf){
  * @param url The domain that the request needs to be routed to
  **/
 function check_domain_suffix(domain){
+  console.log('run check domain suffix');
   var spl = domain.split(".");
   for (var i = -2; i > -4; i--) {
     if (ROUTING_DOMAIN_WHITELIST[spl.slice(i).join(".")]){
@@ -286,8 +288,8 @@ function execute_route_request(request, response, conf, token, cookiejar){
     qs: request.query,
     headers: alter_request_headers(request, conf),
     jar: cookiejar,
-    body: request.body
   });
+  request.pipe(remote_request);
   remote_request.on('response', function(remote_response){
     response.status(remote_response.status_code);
     response.set(alter_response_headers(remote_response, conf));
@@ -317,6 +319,11 @@ app.get('/test1', function(request, response){
 
 app.all('*', route_request);
 
-app.listen(app.get('port'), function() {
-  console.log('Router is running on port', app.get('port'));
-});
+if(require.main === module){
+  app.listen(app.get('port'), function() {
+    console.log('Router is running on port', app.get('port'));
+  });
+}else{
+  exports.remote_request = route_request;
+  exports.check_domain_suffix = check_domain_suffix;
+}
