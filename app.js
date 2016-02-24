@@ -324,6 +324,6 @@ if(require.main === module){
     console.log('Router is running on port', app.get('port'));
   });
 }else{
-  exports.remote_request = route_request;
+  exports.route_request = route_request;
   exports.check_domain_suffix = check_domain_suffix;
 }
