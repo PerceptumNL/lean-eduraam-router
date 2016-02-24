@@ -32,13 +32,7 @@ const ROUTING_DOMAIN_WHITELIST = {
   "google.com": 1};
 
 if(D_REQUEST_ALL){
-  require('request-debug')(requests, function(type, data, r){
-    console.error("Logging "+type);
-	console.error(data);
-    if( type == "request" && ( r.method == "PUT" || r.method == "POST" ) ){
-      if(!data.body) console.error("WARNING: No body with PUT or POST");
-    }
-  });
+  require('request-debug')(requests);
 }
 
 /*********************************
@@ -229,7 +223,6 @@ function alter_response_headers(res, conf){
  * @param url The domain that the request needs to be routed to
  **/
 function check_domain_suffix(domain){
-  console.log('run check domain suffix');
   var spl = domain.split(".");
   for (var i = -2; i > -4; i--) {
     if (ROUTING_DOMAIN_WHITELIST[spl.slice(i).join(".")]){
@@ -281,7 +274,6 @@ function route_request(request, response){
 
 function execute_route_request(request, response, conf, token, cookiejar){
   // Proxying the request, while altering the headers
-  console.log([conf.app_base_url,request.originalUrl]);
   var remote_request = requests({
     method: request.method,
     uri: conf.app_base_url+request.originalUrl,
