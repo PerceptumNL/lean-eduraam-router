@@ -281,7 +281,7 @@ function route_request(request, response){
 
 function execute_route_request(request, response, conf, token, cookiejar){
   // Proxying the request, while altering the headers
-  console.log(request.body);
+  console.log([conf.app_base_url,request.originalUrl]);
   var remote_request = requests({
     method: request.method,
     uri: conf.app_base_url+request.originalUrl,
@@ -319,11 +319,12 @@ app.get('/test1', function(request, response){
 
 app.all('*', route_request);
 
-if(require.main === module){
-  app.listen(app.get('port'), function() {
-    console.log('Router is running on port', app.get('port'));
-  });
-}else{
+app.listen(app.get('port'), function() {
+	console.log('Router is running on port', app.get('port'));
+});
+
+if(require.main !== module){
   exports.route_request = route_request;
+  exports.express = app;
   exports.check_domain_suffix = check_domain_suffix;
 }
