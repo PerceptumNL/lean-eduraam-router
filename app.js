@@ -202,15 +202,16 @@ function alter_request_headers(req, conf){
 function alter_response_headers(res, conf){
   altered_headers = {}
   for(var key in res.headers){
-    if(key == "location"){
+    if(key.toLowerCase() == "location"){
       altered_headers[key] = get_routed_url(res.headers[key], conf);
-    } else if(key == "set-cookie"){
+    } else if(key.toLowerCase() == "set-cookie"){
       continue;
-    } else if(key == "x-frame-options"){
+    } else if(key.toLowerCase() == "x-frame-options"){
       continue;
-    } else if(key == "content-security-policy"){
+    } else if(key.toLowerCase() == "content-security-policy"){
       altered_headers[key] = res.headers[key].replace(
         "frame-ancestors", "frame-ancestors " + conf.whitelist_frame_ancestors);
+      continue
     } else {
       altered_headers[key] = res.headers[key];
     }
@@ -287,7 +288,7 @@ function execute_route_request(request, response, conf, token, cookiejar){
   });
   request.pipe(remote_request);
   remote_request.on('response', function(remote_response){
-    response.status(remote_response.status_code);
+    response.status(remote_response.statusCode);
     response.set(alter_response_headers(remote_response, conf));
     if(token){
       // TODO: Only update cookiejar when changes happened.
@@ -295,8 +296,8 @@ function execute_route_request(request, response, conf, token, cookiejar){
         set_cookiejar_by_token(token, cookiejar);
       }, token, cookiejar);
     }
+    remote_response.pipe(response);
   });
-  remote_request.pipe(response);
 }
 
 /**********************************
@@ -323,4 +324,6 @@ if(require.main !== module){
   exports.route_request = route_request;
   exports.express = app;
   exports.check_domain_suffix = check_domain_suffix;
+  exports.alter_request_headers = alter_request_headers;
+  exports.alter_response_headers = alter_response_headers;
 }

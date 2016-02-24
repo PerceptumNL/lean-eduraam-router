@@ -1,12 +1,15 @@
 var assert = require('assert');
 var client = require('supertest')
-var server = require("mitm")();
+var Mitm = require("mitm")
 
 var app = require('../app.js');
 var router = app.express;
 
-describe('Router', function(){
+describe('Routing post request', function(){
+  var server;
+
   before(function(done){
+	server = Mitm();
     server.on("connect", function(socket, opts) {
       if (opts.host == "127.0.0.1"){
         console.log('Bypassing '+ opts.host);
