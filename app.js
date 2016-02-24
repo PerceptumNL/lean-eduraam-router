@@ -16,6 +16,8 @@ const D_RES_HDRS = (process.env.DEBUG_RESPONSE_HEADERS == '1');
 const D_INC_REQ = (process.env.DEBUG_INCOMING_REQUEST == '1');
 // DEBUG: show token and cookiejar operations
 const D_TOKEN_CJ = (process.env.DEBUG_TOKEN_COOKIEJAR == '1');
+// DEBUG: show the configuration object created for this request
+const D_CONF = (process.env.DEBUG_CONFIGURATION == '1');
 // DEBUG: load request debugger
 const D_REQUEST_ALL = (process.env.DEBUG_REQUEST_ALL == '1');
 // The domain string to add to the frame-ancestors part of the CSP header
@@ -257,6 +259,8 @@ function route_request(request, response){
     'app_base_url': "https" + "://" + app_domain,
     'whitelist_frame_ancestors': CSP_WHITELIST_FRAME_ANCESTORS
   };
+
+  D_CONF && console.log(["CONF", conf]);
 
   if( 'token' in request.query ){
 	D_TOKEN_CJ && console.log("Using cookiejar belonging to "+token);
