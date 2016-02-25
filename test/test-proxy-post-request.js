@@ -3,7 +3,6 @@ var client = require('supertest')
 var Mitm = require("mitm")
 
 var app = require('../app.js');
-var router = app.express;
 
 describe('Routing post request', function(){
   var server;
@@ -31,7 +30,7 @@ describe('Routing post request', function(){
   });
 
   it('should sent data through on post', function(done){
-    client(router)
+    client(app)
       .post('/echo')
       .set('Host', "6d6f636b.router.local")
       .send("foo=bar")
