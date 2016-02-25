@@ -1,8 +1,10 @@
 var express = require('express');
+var compress = require('compression');
 var requests = require('request');
 var tough = require('tough-cookie');
 var urllib = require('url');
 var MongoClient = require('mongodb').MongoClient;
+const util = require('util');
 const Transform = require('stream').Transform;
 
 /************
@@ -174,13 +176,12 @@ function get_unrouted_url(url, conf){
  * @param {Object} conf Configuration object for this interaction.
  **/
 function alter_request_headers(req, conf){
-  altered_headers = {}
+  var altered_headers = {}
+  var ignore_list = ["host", "connection", "cookie", "accept-encoding"];
   for(var key in req.headers){
-    if(key == "host" || key == "connection"){
+    if(ignore_list.indexOf(key.toLowerCase()) != -1){
       continue;
-    } else if(key == "cookie") {
-      continue;
-    } else if(key == "referer" || key == "origin"){
+    } else if(["referer","referrer","origin"].indexOf(key.toLowerCase()) != -1){
       try {
         altered_headers[key] = get_unrouted_url(req.headers[key], conf);
       } catch(err) {
@@ -190,6 +191,7 @@ function alter_request_headers(req, conf){
       altered_headers[key] = req.headers[key];
     }
   }
+  altered_headers['accept-encoding'] = "identity";
   D_REQ_HDRS && console.log("Setting request headers to:");
   D_REQ_HDRS && console.log(altered_headers);
   return altered_headers;
@@ -223,16 +225,18 @@ function alter_response_headers(res, conf){
 }
 
 util.inherits(PlaceDomainBodyTransform, Transform);
-function PlaceDomainBodyTransform(domain, options) {
+function PlaceDomainBodyTransform(domain_string, options) {
   if (!(this instanceof PlaceDomainBodyTransform))
-    return new PlaceDomainBodyTransform(domain, options);
+    return new PlaceDomainBodyTransform(domain_string, options);
 
+  options = options || {};
+  options.decodeString = false;
   Transform.call(this, options);
   this._finished = false;
   this._lookout = Buffer('<head>');
   this._lookout_length = this._lookout.length;
   this._match_index = 0;
-  this._domain = domain;
+  this._domain_string = domain_string;
 }
 
 PlaceDomainBodyTransform.prototype._transform = function(chunk, encoding, done) {
@@ -244,7 +248,8 @@ PlaceDomainBodyTransform.prototype._transform = function(chunk, encoding, done) 
         this._match_index++;
         if(this._match_index == this._lookout_length){
           this.push(chunk.slice(0,i+1));
-          this.push(Buffer("<script>document.domain="+domain+";</script>"));
+          this.push(Buffer(
+            "<script>document.domain=\""+this._domain_string+"\";</script>"));
           this.push(chunk.slice(i+1));
           done();
           return;
@@ -276,7 +281,8 @@ function route_request(request, response){
     'incoming request: '+request.method+' '+request.originalUrl);
 
   try {
-    var hex_subdomain = new Buffer(request.headers.host.split(".")[0], "hex");
+    var hostname_parts = request.headers.host.split(".");
+    var hex_subdomain = new Buffer(hostname_parts[0], "hex");
     var app_domain = hex_subdomain.toString()
   } catch(err) {
     response.status(400).end();
@@ -293,11 +299,12 @@ function route_request(request, response){
 
   conf = {
     'router_base_url': ROUTER_PROTOCOL + "://" + request.headers.host,
+    'root_domain': hostname_parts.slice(1).join("."),
     'app_base_url': "https" + "://" + app_domain,
     'whitelist_frame_ancestors': CSP_WHITELIST_FRAME_ANCESTORS
   };
 
-  D_CONF && console.log(["CONF", conf]);
+  D_CONF && console.log("CONF", conf);
 
   if( 'token' in request.query ){
 	D_TOKEN_CJ && console.log("Using cookiejar belonging to "+token);
@@ -322,6 +329,7 @@ function execute_route_request(request, response, conf, token, cookiejar){
     headers: alter_request_headers(request, conf),
     jar: cookiejar,
   });
+  var body_transform = PlaceDomainBodyTransform(conf.root_domain);
   request.pipe(remote_request);
   remote_request.on('response', function(remote_response){
     response.status(remote_response.statusCode);
@@ -332,7 +340,7 @@ function execute_route_request(request, response, conf, token, cookiejar){
         set_cookiejar_by_token(token, cookiejar);
       }, token, cookiejar);
     }
-    remote_response.pipe(response);
+    remote_response.pipe(body_transform).pipe(response);
   });
 }
 
@@ -342,6 +350,8 @@ function execute_route_request(request, response, conf, token, cookiejar){
 
 var app = express();
 app.set('port', (process.env.PORT || 5000));
+
+app.use(compress());
 
 app.get('/test1', function(request, response){
   console.log("Testing shortcut");
