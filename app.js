@@ -3,6 +3,7 @@ var requests = require('request');
 var tough = require('tough-cookie');
 var urllib = require('url');
 var MongoClient = require('mongodb').MongoClient;
+const Transform = require('stream').Transform;
 
 /************
  * Settings *
@@ -221,6 +222,41 @@ function alter_response_headers(res, conf){
   return altered_headers;
 }
 
+util.inherits(PlaceDomainBodyTransform, Transform);
+function PlaceDomainBodyTransform(domain, options) {
+  if (!(this instanceof PlaceDomainBodyTransform))
+    return new PlaceDomainBodyTransform(domain, options);
+
+  Transform.call(this, options);
+  this._finished = false;
+  this._lookout = Buffer('<head>');
+  this._lookout_length = this._lookout.length;
+  this._match_index = 0;
+  this._domain = domain;
+}
+
+PlaceDomainBodyTransform.prototype._transform = function(chunk, encoding, done) {
+  if (this._finished){
+	  done(null, chunk);
+  } else {
+    for(var i = 0; i < chunk.length; i++){
+      if(chunk[i] == this._lookout[this._match_index]){
+        this._match_index++;
+        if(this._match_index == this._lookout_length){
+          this.push(chunk.slice(0,i+1));
+          this.push(Buffer("<script>document.domain="+domain+";</script>"));
+          this.push(chunk.slice(i+1));
+          done();
+          return;
+        }
+      } else {
+        this._match_index = 0;
+      }
+    }
+    done(null, chunk);
+  }
+};
+
 /**
  * Utility function to check if routed domain is whitelisted.
  * @param url The domain that the request needs to be routed to
@@ -326,4 +362,5 @@ if(require.main !== module){
   exports.check_domain_suffix = check_domain_suffix;
   exports.alter_request_headers = alter_request_headers;
   exports.alter_response_headers = alter_response_headers;
+  exports.PlaceDomainBodyTransform = PlaceDomainBodyTransform;
 }
