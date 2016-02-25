@@ -8,21 +8,26 @@ var router = require('./lib/router.js');
  *********************************/
 
 var app = express();
-app.set('port', (process.env.PORT || 5000));
+var port = (process.env.PORT || 5000)
 
 app.use(compress());
 
-app.get('/test1', function(request, response){
-  console.log("Testing shortcut");
-  request.headers.host = "73747564696f2e636f64652e6f7267.codecult.nl";
-  request.originalUrl = "/";
-  router.route_request(request, response);
+app.get('/code.org/*', function(request, response){
+  if(request.headers.host == ("localhost:"+port)){
+    console.log("Testing shortcut");
+    request.headers.host = "73747564696f2e636f64652e6f7267.codecult.nl";
+    request.originalUrl = request.originalUrl.substring(9);
+    router.route_request(request, response);
+  }else{
+    console.log('Testing shortcut found in wild: ', request.headers.host);
+    router.route_request(request, response);
+  }
 });
 
 app.all('*', router.route_request);
 
-app.listen(app.get('port'), function() {
-	console.log('Router is running on port', app.get('port'));
+app.listen(port, function() {
+	console.log('Router is running on port', port);
 });
 
 if(require.main !== module){
