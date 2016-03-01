@@ -17,6 +17,7 @@ app.get('/code.org/*', function(request, response){
     console.log("Testing shortcut");
     request.headers.host = "73747564696f2e636f64652e6f7267.codecult.nl";
     request.originalUrl = request.originalUrl.substring(9);
+    request.url = request.url.substring(9);
     router.route_request(request, response);
   }else{
     console.log('Testing shortcut found in wild: ', request.headers.host);
