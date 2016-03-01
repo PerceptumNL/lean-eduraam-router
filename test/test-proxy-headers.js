@@ -2,17 +2,17 @@ var assert = require('assert');
 var client = require('supertest')
 var Mitm = require("mitm")
 
-var app = require('../app.js');
-var router = app.express;
+var router = require('../app.js');
+var routerlib = require('../lib/router.js');
 
 const CSP = [
-	"default-src 'self' https:; script-src 'self'",
-	"https: 'unsafe-inline' 'unsafe-eval'; style-src",
-	"'self' https: 'unsafe-inline'; img-src 'self'",
-	"https: data: blob:; font-src 'self' https: data:;",
-	"connect-src 'self' https: https://app.domain.org",
-	"wss://ws.app.domain.org; report-uri app.domain.org/mixed;",
-	"frame-ancestors 'self' app.domain.org"].join(" ");
+    "default-src 'self' https:; script-src 'self'",
+    "https: 'unsafe-inline' 'unsafe-eval'; style-src",
+    "'self' https: 'unsafe-inline'; img-src 'self'",
+    "https: data: blob:; font-src 'self' https: data:;",
+    "connect-src 'self' https: https://app.domain.org",
+    "wss://ws.app.domain.org; report-uri app.domain.org/mixed;",
+    "frame-ancestors 'self' app.domain.org"].join(" ");
 const CSP_routed = [
     "default-src 'self' https:; script-src 'self'",
     "https: 'unsafe-inline' 'unsafe-eval'; style-src",
@@ -20,14 +20,14 @@ const CSP_routed = [
     "https: data: blob:; font-src 'self' https: data:;",
     "connect-src 'self' https: https://app.domain.org",
     "wss://ws.app.domain.org; report-uri app.domain.org/mixed;",
-    "frame-ancestors localhost 'self' app.domain.org"].join(" ");
+    "frame-ancestors localhost:* 'self' app.domain.org"].join(" ");
 
 describe('Routing and changing headers', function(){
   var old_whitelist_frame_ancestors;
   var server;
 
   before(function(done){
-	server = Mitm();
+    server = Mitm();
     server.on("connect", function(socket, opts) {
       if (opts.host == "127.0.0.1") socket.bypass();
     })
@@ -35,11 +35,11 @@ describe('Routing and changing headers', function(){
     server.on("request", function(req, res) {
       if(req.url == "/csp-lc"){
         res.statusCode = 200;
-		res.setHeader('content-security-policy', CSP);
+        res.setHeader('content-security-policy', CSP);
         req.pipe(res);
       }else if(req.url == "/csp-uc"){
         res.statusCode = 200;
-		res.setHeader('Content-Security-Policy', CSP);
+        res.setHeader('Content-Security-Policy', CSP);
         req.pipe(res);
       }else{
         res.statusCode = 404;
@@ -63,9 +63,13 @@ describe('Routing and changing headers', function(){
   it('should rewrite lower-case csp header', function(done){
     // Mock conf
     var conf = {
-      'router_base_url': "https://6d6f636b.router.local",
-      'app_base_url': "https://mock",
-      'whitelist_frame_ancestors': "localhost"
+      router_protocol: 'https',
+      app_protocol: 'https',
+      routed_app_host: "6d6f636b.router.local",
+      app_host: "mock",
+      router_base_domain: 'router.local',
+      whitelist_frame_ancestors: 'localhost:*',
+      token: 'special-token',
     };
 
     // Mock req;
@@ -74,7 +78,7 @@ describe('Routing and changing headers', function(){
       'content-security-policy': CSP
     };
 
-    altered_headers = app.alter_response_headers(res, conf);
+    altered_headers = routerlib.alter_response_headers(res, conf);
     csp_header = altered_headers['content-security-policy'] || 
       altered_headers['Content-Security-Policy'];
     assert.equal(csp_header, CSP_routed);
@@ -84,9 +88,13 @@ describe('Routing and changing headers', function(){
   it('should rewrite upper-case csp header', function(done){
     // Mock conf
     var conf = {
-      'router_base_url': "https://6d6f636b.router.local",
-      'app_base_url': "https://mock",
-      'whitelist_frame_ancestors': "localhost"
+      router_protocol: 'https',
+      app_protocol: 'https',
+      routed_app_host: "6d6f636b.router.local",
+      app_host: "mock",
+      router_base_domain: 'router.local',
+      whitelist_frame_ancestors: 'localhost:*',
+      token: 'special-token',
     };
 
     // Mock req;
@@ -95,8 +103,8 @@ describe('Routing and changing headers', function(){
       'Content-Security-Policy': CSP
     };
 
-    altered_headers = app.alter_response_headers(res, conf);
-    csp_header = altered_headers['content-security-policy'] || 
+    altered_headers = routerlib.alter_response_headers(res, conf);
+    csp_header = altered_headers['content-security-policy'] ||
       altered_headers['Content-Security-Policy'];
     assert.equal(csp_header, CSP_routed);
     done();
