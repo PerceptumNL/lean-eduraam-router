@@ -4,3 +4,12 @@ node_js:
 - stable
 before_script:
     - npm install -g mocha
+deploy:
+  provider: heroku
+  buildpack: node_js
+  api_key:
+    secure: h+G88h7Bblrqwvnm71X4GJMFMpUiThtkvyXg5Zn9ieBaP1yEORdOu8PJ5vm3Gpmef4ipuZG1hiShd+gI7zCsvmjJn++4xzfP8sUg5RIRqBJ8HEW8kuR4OX1dvjk6pg/r2jEZ4W+W30oWnN21bBiRrM609E0jOuiIqxH0/PqazbP5TDv/9oNphhh9uMsh4D/6qfvYz0SjyiSxu8R2/0YPr02I4o5EXcnTkfK5nTd4hRDJf+/uloplySDXTk6QanqY8d+knqNHCwsvgE5o6jIUhEpK7odzPqbNJfa3UEijon3o4Ses2fqaQlRlyQTMUoXaVJDPVZg+9bD+ut2JscJDLj2g6BKbfYP2HFZXYmG9EteDYjhRDBmKEr3IV7xh+caJkvKNMGVTSG/XWl7xsPNv7CW/Z1+I62QZ191hBHhK8Ca/IWuqrBgD/G2vn4NGzH9qnHbjIHXYmeFbuXAnTgKzScM75vz5JwVJBdVvV2ZMFNuyevEjQkrlbABcw2xmlBDm6WrXYqbOwjahjz7cROoHrszFaGjjEkVjiO61W8yHmWyfsQitV2Sztq9681vcQCBAVJzL4M5qYzl1I2aeifq8e+b2g6V0zMQgcxIe9I279jimZD+PkGql7UCsG5FTOpGhqn2HOzPn0iRaApuVR7jLsWMuOHfmHcCH54hXdFK3BFA=
+  app: eduraam-router-staging
+  on:
+    branch: master
+    repo: PerceptumNL/lean-eduraam-router
