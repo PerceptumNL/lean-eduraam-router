@@ -10,7 +10,7 @@ describe('Routing urls', function(){
       app_host: 'studio.code.org',
       router_base_domain: 'router.local',
       token: 'special-token',
-      whitelist_frame_ancestors: 'localhost'
+      whitelist_frame_ancestors: '*.codecult.local:*'
     };
 
     assert.equal(
@@ -28,7 +28,7 @@ describe('Routing urls', function(){
       app_host: 'studio.code.org',
       router_base_domain: 'router.local',
       token: 'special-token',
-      whitelist_frame_ancestors: 'localhost'
+      whitelist_frame_ancestors: '*.codecult.local:*'
     };
 
     assert.equal(

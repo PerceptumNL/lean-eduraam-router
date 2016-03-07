@@ -20,7 +20,7 @@ const CSP_routed = [
     "https: data: blob:; font-src 'self' https: data:;",
     "connect-src 'self' https: https://app.domain.org",
     "wss://ws.app.domain.org; report-uri app.domain.org/mixed;",
-    "frame-ancestors localhost:* 'self' app.domain.org"].join(" ");
+    "frame-ancestors *.codecult.local:* 'self' app.domain.org"].join(" ");
 
 describe('Routing and changing headers', function(){
   var old_whitelist_frame_ancestors;
@@ -68,7 +68,7 @@ describe('Routing and changing headers', function(){
       routed_app_host: "6d6f636b.router.local",
       app_host: "mock",
       router_base_domain: 'router.local',
-      whitelist_frame_ancestors: 'localhost:*',
+      whitelist_frame_ancestors: '*.codecult.local:*',
       token: 'special-token',
     };
 
@@ -93,7 +93,7 @@ describe('Routing and changing headers', function(){
       routed_app_host: "6d6f636b.router.local",
       app_host: "mock",
       router_base_domain: 'router.local',
-      whitelist_frame_ancestors: 'localhost:*',
+      whitelist_frame_ancestors: '*.codecult.local:*',
       token: 'special-token',
     };
 
