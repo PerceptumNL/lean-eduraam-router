@@ -22,6 +22,15 @@ const CSP_routed = [
     "wss://ws.app.domain.org; report-uri app.domain.org/mixed;",
     "frame-ancestors *.codecult.local:* 'self' app.domain.org"].join(" ");
 
+const CSP_http_routed = [
+    "default-src 'self' http: https:; script-src 'self'",
+    "http: https: 'unsafe-inline' 'unsafe-eval'; style-src",
+    "'self' http: https: 'unsafe-inline'; img-src 'self'",
+    "http: https: data: blob:; font-src 'self' http: https: data:;",
+    "connect-src 'self' http: https: https://app.domain.org",
+    "wss://ws.app.domain.org; report-uri app.domain.org/mixed;",
+    "frame-ancestors *.codecult.local:* 'self' app.domain.org"].join(" ");
+
 describe('Routing and changing headers', function(){
   var old_whitelist_frame_ancestors;
   var server;
@@ -79,7 +88,7 @@ describe('Routing and changing headers', function(){
     };
 
     altered_headers = routerlib.alter_response_headers(res, conf);
-    csp_header = altered_headers['content-security-policy'] || 
+    csp_header = altered_headers['content-security-policy'] ||
       altered_headers['Content-Security-Policy'];
     assert.equal(csp_header, CSP_routed);
     done();
@@ -115,7 +124,7 @@ describe('Routing and changing headers', function(){
       .get('/csp-lc')
       .set('Host', "6d6f636b.router.local")
       .expect(200)
-      .expect('content-security-policy', CSP_routed)
+      .expect('content-security-policy', CSP_http_routed)
       .end(function(err, res){
         if(err) done(err);
         else done();
@@ -127,7 +136,7 @@ describe('Routing and changing headers', function(){
       .get('/csp-uc')
       .set('Host', "6d6f636b.router.local")
       .expect(200)
-      .expect('Content-Security-Policy', CSP_routed)
+      .expect('Content-Security-Policy', CSP_http_routed)
       .end(function(err, res){
         if(err) done(err);
         else done();
